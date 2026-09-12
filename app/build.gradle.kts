@@ -20,20 +20,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    signingConfigs {
-        // CI 可选签名：仅当 Secrets 提供 keystore 时启用，否则用 debug 签名打出可安装的 Alpha 包。
-        val releaseKeystore = System.getenv("KEYSTORE_PATH")
-        val releaseAlias = System.getenv("KEY_ALIAS")
-        if (!releaseKeystore.isNullOrBlank() && !releaseAlias.isNullOrBlank()) {
-            create("release") {
-                storeFile = file(releaseKeystore)
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = releaseAlias
-                keyPassword = System.getenv("KEY_PASSWORD")
-            }
-        }
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -41,9 +27,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.findByName(
-                if (System.getenv("KEYSTORE_PATH").isNullOrBlank()) "debug" else "release"
-            )
+            // Alpha 阶段无 release 签名，直接用 debug 签名打出可安装包；
+            // 后续加上正式签名后，再切回 signingConfigs 逻辑。
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
