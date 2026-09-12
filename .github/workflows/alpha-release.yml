@@ -50,6 +50,9 @@ jobs:
           yes | sdkmanager --licenses > /dev/null
           sdkmanager "platforms;android-35" "platform-tools" "build-tools;35.0.0"
 
+      - name: Grant Gradle wrapper permission
+        run: chmod +x gradlew
+
       - name: Run unit tests
         run: ./gradlew :app:testDebugUnitTest --stacktrace
 
