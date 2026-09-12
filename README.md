@@ -77,6 +77,15 @@ wheat_app.html                       # HTML 设计原型
 
 `HabitLogicTest` 覆盖：空记录为种子期、仅今天记账进入幼苗期、连续 3 天进入成长期、断签只算尾部连续天数。
 
+## CI/CD（GitHub Actions Alpha 发布）
+
+- 工作流：`.github/workflows/alpha-release.yml`，手动触发（Actions → Alpha Release → Run workflow），无需打版本标签。
+- 版本号规则：Alpha 自动为 `v0.<run_number>.0-alpha`（`versionCode = run_number`）；推送 `v*` 标签（如 `v1.0.0`）则发布同名正式 Release。
+- 构建产物：`wheat-<version>.apk`，以 Pre-release 形式附在 GitHub Release 上。
+- 签名：默认回退 debug 签名（可安装体验）；如需正式签名，在仓库 Secrets 配置 `KEYSTORE_BASE64`、`KEY_ALIAS`、`KEYSTORE_PASSWORD`、`KEY_PASSWORD` 后自动启用。
+- 本地复刻 CI 传参（PowerShell 注意引号）：
+  `./gradlew :app:assembleRelease "-PversionCode=999" "-PversionName=0.999.0-alpha"`。
+
 ## 设计规范（对齐 wheat_app.html）
 
 - 底色奶油 `#FDFBF7` / 卡片底 `#F9F4E8`，品牌橙 `#E07A5F` 只用于主 CTA 与强调。

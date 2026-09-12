@@ -13,10 +13,25 @@ android {
         applicationId = "com.iicemeta.wheat"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // CI 可通过 -PversionCode / -PversionName 覆盖；默认保持本地开发值。
+        versionCode = (findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
+        versionName = (findProperty("versionName") as String?) ?: "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        // CI 可选签名：仅当 Secrets 提供 keystore 时启用，否则用 debug 签名打出可安装的 Alpha 包。
+        val releaseKeystore = System.getenv("KEYSTORE_PATH")
+        val releaseAlias = System.getenv("KEY_ALIAS")
+        if (!releaseKeystore.isNullOrBlank() && !releaseAlias.isNullOrBlank()) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = releaseAlias
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -25,6 +40,9 @@ android {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.findByName(
+                if (System.getenv("KEYSTORE_PATH").isNullOrBlank()) "debug" else "release"
             )
         }
     }
