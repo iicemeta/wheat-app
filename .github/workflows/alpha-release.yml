@@ -74,7 +74,7 @@ jobs:
       - name: Rename artifact
         run: |
           SRC=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
-          DST="app/build/outputs/apk/release/wheat-${{ steps.version.outputs.version_name }}.apk"
+          DST="app/build/outputs/apk/release/com.iicemeta.wheat.apk"
           mv "$SRC" "$DST"
           echo "APK=$DST" >> "$GITHUB_ENV"
           ls -lh "$DST"
