@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>麦穗 (Wheat) - 习惯养成版记账App原型</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wheat: {
+                            50: '#FDFBF7',
+                            100: '#F9F4E8',
+                            200: '#F1E3C5',
+                            300: '#E7CE97',
+                            400: '#DCB568',
+                            500: '#D4A373', // Primary Golden Wheat
+                            600: '#BC8A56',
+                            700: '#9A6E41',
+                            800: '#7D5735',
+                            900: '#67472E',
+                        },
+                        autumn: {
+                            orange: '#E07A5F', // Autumn orange accent
+                            yellow: '#F4A261',
+                            light: '#FAF3DD',
+                            green: '#81B29A',
+                            dark: '#3D405B'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for analytics tab -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom animations & polish */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes sway {
+            0%, 100% { transform: rotate(0deg); transform-origin: bottom center; }
+            50% { transform: rotate(3deg); transform-origin: bottom center; }
+        }
+        .animate-sway {
+            animation: sway 4s ease-in-out infinite;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F9F4E8;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #DCB568;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="bg-wheat-50 text-autumn-dark font-sans antialiased min-h-screen flex flex-col items-center justify-start py-4 px-2 sm:px-4">
+
+    <!-- App Container simulating a mobile device frame or responsive container -->
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col h-[850px] relative border-4 border-wheat-200">
+        
+        <!-- Status Bar -->
+        <div class="bg-wheat-100 px-6 py-2 flex justify-between items-center text-xs text-wheat-800 font-semibold select-none">
+            <span>9:41</span>
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-signal"></i>
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-battery-full text-autumn-orange"></i>
+            </div>
+        </div>
+
+        <!-- Top Header Navigation / App Bar -->
+        <div class="bg-gradient-to-r from-wheat-200 to-wheat-300 px-6 py-4 flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-autumn-orange text-white flex items-center justify-center shadow-md text-lg">
+                    <i class="fa-solid fa-wheat-awn"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-wheat-900 tracking-tight">麦穗 Wheat</h1>
+                    <p class="text-xs text-wheat-700" id="header-subtitle">坚持记账，静待麦田成熟</p>
+                </div>
+            </div>
+            <button onclick="openBudgetModal()" class="bg-white/80 hover:bg-white text-wheat-900 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm transition flex items-center space-x-1.5 border border-wheat-300">
+                <i class="fa-solid fa-gear text-autumn-orange"></i>
+                <span>生活费设置</span>
+            </button>
+        </div>
+
+        <!-- Main Screen Content Area (Scrollable) -->
+        <div class="flex-1 overflow-y-auto pb-24" id="main-content">
+            
+            <!-- TAB 1: 首页 (习惯养成与麦穗成长可视化) -->
+            <div id="tab-home" class="tab-pane p-5 space-y-6">
+                <!-- Wheat Habit Visualization Card -->
+                <div class="bg-gradient-to-b from-amber-50 via-wheat-100 to-wheat-200 rounded-3xl p-6 shadow-inner text-center relative overflow-hidden border border-wheat-300/60">
+                    <div class="absolute top-3 right-4 bg-amber-100/80 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-amber-800 border border-amber-200">
+                        连续记账 <span id="streak-days" class="text-autumn-orange font-black">5</span> 天
+                    </div>
+                    
+                    <p class="text-xs text-wheat-700 mb-1">今日记账状态：<span id="today-status-badge" class="font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">✓ 今日已打卡</span></p>
+                    <h2 class="text-2xl font-extrabold text-wheat-900 mb-3">麦穗成长值 <span id="wheat-exp" class="text-autumn-orange">85</span> / 100</h2>
+                    
+                    <!-- Dynamic Wheat Illustration / Animation reflecting Habit Persistence -->
+                    <div class="h-48 flex flex-col items-center justify-end relative my-2">
+                        <!-- Ground / Soil -->
+                        <div class="w-48 h-4 bg-wheat-700/30 rounded-full absolute bottom-0 blur-[1px]"></div>
+                        <div class="w-36 h-2 bg-wheat-800/40 rounded-full absolute bottom-1"></div>
+                        
+                        <!-- Animated Wheat Graphic (SVG based on habit level) -->
+                        <div id="wheat-svg-container" class="transition-all duration-700 transform animate-sway">
+                            <svg width="120" height="150" viewBox="0 0 120 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <!-- Stalk -->
+                                <path d="M60 140C60 110 55 85 60 40" stroke="#7D5735" stroke-width="4" stroke-linecap="round"/>
+                                <!-- Leaves -->
+                                <path d="M60 110C40 100 30 85 20 90C30 105 45 115 60 120Z" fill="#81B29A"/>
+                                <path d="M60 90C80 80 95 65 105 70C95 85 80 95 60 100Z" fill="#81B29A"/>
+                                <!-- Wheat grains (Healthy golden harvest) -->
+                                <g id="wheat-ears">
+                                    <ellipse cx="53" cy="45" rx="7" ry="12" fill="#D4A373" transform="rotate(-20 53 45)"/>
+                                    <ellipse cx="67" cy="45" rx="7" ry="12" fill="#D4A373" transform="rotate(20 67 45)"/>
+                                    <ellipse cx="52" cy="30" rx="8" ry="13" fill="#DCB568" transform="rotate(-25 52 30)"/>
+                                    <ellipse cx="68" cy="30" rx="8" ry="13" fill="#DCB568" transform="rotate(25 68 30)"/>
+                                    <ellipse cx="53" cy="16" rx="8" ry="14" fill="#F4A261" transform="rotate(-15 53 16)"/>
+                                    <ellipse cx="67" cy="16" rx="8" ry="14" fill="#F4A261" transform="rotate(15 67 16)"/>
+                                    <path d="M60 5C60 5 62 -5 58 -10C62 -5 65 0 60 5Z" fill="#E07A5F"/>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 bg-white/70 backdrop-blur rounded-2xl p-3 text-xs text-wheat-800 shadow-sm border border-wheat-200 flex items-center justify-between">
+                        <span id="wheat-tip" class="font-medium">🌱 坚持记录每一笔账，小麦正在茁壮成长，远离冲动消费！</span>
+                        <span class="text-autumn-orange font-bold whitespace-nowrap ml-2">距升级还差15点</span>
+                    </div>
+                </div>
+
+                <!-- Quick Action / Add Transaction Trigger Card -->
+                <div class="bg-gradient-to-r from-autumn-orange to-wheat-600 rounded-2xl p-4 text-white shadow-lg flex items-center justify-between cursor-pointer transform hover:scale-[1.02] transition" onclick="openAddModal()">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-plus"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base">记一笔账</h3>
+                            <p class="text-xs text-white/80">培养财务掌控力，给麦田积蓄养分</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-white/80 pr-2"></i>
+                </div>
+
+                <!-- Recent Transactions List -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center px-1">
+                        <h3 class="font-bold text-wheat-900 text-sm">今日财务记录</h3>
+                        <span class="text-xs text-wheat-600">共 3 笔</span>
+                    </div>
+                    
+                    <div id="transaction-list" class="space-y-2">
+                        <!-- Item 1 -->
+                        <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-wheat-100 flex items-center justify-between hover:border-wheat-300 transition">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-base">
+                                    <i class="fa-solid fa-utensils"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-gray-800">食堂午餐</h4>
+                                    <p class="text-xs text-gray-400">餐饮美食 · 12:30</p>
+                                </div>
+                            </div>
+                            <span class="font-bold text-autumn-orange text-base">- ¥18.00</span>
+                        </div>
+                        <!-- Item 2 -->
+                        <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-wheat-100 flex items-center justify-between hover:border-wheat-300 transition">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-base">
+                                    <i class="fa-solid fa-book"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-gray-800">专业教材购买</h4>
+                                    <p class="text-xs text-gray-400">学习进修 · 10:15</p>
+                                </div>
+                            </div>
+                            <span class="font-bold text-autumn-orange text-base">- ¥120.50</span>
+                        </div>
+                        <!-- Item 3 -->
+                        <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-wheat-100 flex items-center justify-between hover:border-wheat-300 transition">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-base">
+                                    <i class="fa-solid fa-bus"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-gray-800">校园公交卡充值</h4>
+                                    <p class="text-xs text-gray-400">交通出行 · 08:20</p>
+                                </div>
+                            </div>
+                            <span class="font-bold text-autumn-orange text-base">- ¥30.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: 粮仓 (每月生活费与消耗视图) -->
+            <div id="tab-granary" class="tab-pane hidden p-5 space-y-6">
+                <!-- Granary Status Card -->
+                <div class="bg-gradient-to-b from-wheat-200 to-amber-100 rounded-3xl p-6 shadow-sm border border-wheat-300 relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <span class="bg-amber-200/80 text-amber-900 text-xs font-bold px-2.5 py-1 rounded-full">秋收粮仓 · 9月</span>
+                            <h2 class="text-2xl font-black text-wheat-900 mt-2">生活费粮仓仓储</h2>
+                        </div>
+                        <div class="w-12 h-12 bg-autumn-orange/20 rounded-2xl flex items-center justify-center text-autumn-orange text-xl shadow-inner">
+                            <i class="fa-solid fa-warehouse"></i>
+                        </div>
+                    </div>
+
+                    <!-- Granary Visual Representation: A wooden barn container whose filling drops as expenses rise -->
+                    <div class="bg-white/80 backdrop-blur rounded-2xl p-4 my-4 shadow-sm border border-wheat-200">
+                        <div class="flex justify-between items-center mb-2 text-xs font-bold text-wheat-800">
+                            <span>粮仓剩余储量</span>
+                            <span id="granary-percent" class="text-autumn-orange text-sm font-black">68%</span>
+                        </div>
+                        <!-- Granary Barn Container Graphic -->
+                        <div class="w-full bg-wheat-100 h-28 rounded-2xl relative overflow-hidden border-2 border-wheat-400 flex flex-col justify-end">
+                            <!-- Roof triangle simulation -->
+                            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[120px] border-l-transparent border-r-[120px] border-r-transparent border-b-[25px] border-b-wheat-700 z-10"></div>
+                            
+                            <!-- Wheat Grain Fill Level -->
+                            <div id="granary-fill" class="w-full bg-gradient-to-t from-amber-600 via-amber-500 to-wheat-400 transition-all duration-700 relative" style="height: 68%;">
+                                <!-- Texture lines -->
+                                <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:12px_12px]"></div>
+                            </div>
+                            
+                            <!-- Label inside granary -->
+                            <div class="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                                <span id="granary-status-text" class="bg-white/90 px-3 py-1 rounded-full text-xs font-bold text-wheat-900 shadow">储粮丰厚，安心食用</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Budget Metrics Grid -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white/90 p-3.5 rounded-2xl border border-wheat-200">
+                            <p class="text-xs text-wheat-600 font-medium">每月总生活费</p>
+                            <p class="text-lg font-bold text-wheat-900 mt-1">¥<span id="total-budget">1500.00</span></p>
+                        </div>
+                        <div class="bg-white/90 p-3.5 rounded-2xl border border-wheat-200">
+                            <p class="text-xs text-wheat-600 font-medium">本月已消耗</p>
+                            <p class="text-lg font-bold text-autumn-orange mt-1">¥<span id="spent-budget">480.00</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Average Consumption Card -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-wheat-100 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-2xl bg-wheat-100 text-wheat-700 flex items-center justify-center">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-gray-800">日均消费参考</h4>
+                            <p class="text-xs text-gray-400">当前约合每日 ¥32.00</p>
+                        </div>
+                    </div>
+                    <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full">状态健康</span>
+                </div>
+
+                <!-- Monthly Category Breakdown -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-wheat-100 space-y-4">
+                    <h3 class="font-bold text-wheat-900 text-sm">粮仓消耗去向统计</h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1 font-medium">
+                                <span class="text-gray-700">🍚 餐饮美食 (食堂/外卖)</span>
+                                <span class="text-wheat-800 font-bold">¥320.00 (66%)</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-autumn-orange h-full rounded-full" style="width: 66%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1 font-medium">
+                                <span class="text-gray-700">📚 学习与文具</span>
+                                <span class="text-wheat-800 font-bold">¥100.00 (21%)</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-wheat-500 h-full rounded-full" style="width: 21%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1 font-medium">
+                                <span class="text-gray-700">🚌 交通出行</span>
+                                <span class="text-wheat-800 font-bold">¥60.00 (13%)</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-autumn-green h-full rounded-full" style="width: 13%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: 统计与秋收账本 -->
+            <div id="tab-stats" class="tab-pane hidden p-5 space-y-6">
+                <!-- Summary Card -->
+                <div class="bg-gradient-to-r from-wheat-700 to-wheat-900 rounded-3xl p-5 text-white shadow-md">
+                    <p class="text-xs text-wheat-200">2026年9月度总览</p>
+                    <div class="flex justify-between items-end mt-2">
+                        <div>
+                            <span class="text-xs text-wheat-300">本月累计支出</span>
+                            <h2 class="text-2xl font-black">¥480.00</h2>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-wheat-300">节余比例</span>
+                            <h3 class="text-lg font-bold text-autumn-yellow">68%</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Container -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-wheat-100 space-y-3">
+                    <h3 class="font-bold text-wheat-900 text-sm">近7天收支曲线</h3>
+                    <div class="h-48 relative">
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Financial Advice Banner -->
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start space-x-3">
+                    <div class="text-amber-600 text-lg mt-0.5">
+                        <i class="fa-solid fa-lightbulb"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-xs text-amber-900">麦穗习惯贴士</h4>
+                        <p class="text-xs text-amber-700 mt-1">您已连续 5 天坚持认真记账打卡！记录是对财务最好的掌控，继续保持良好的习惯哦！</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Navigation Bar -->
+        <div class="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-wheat-200 px-6 py-3 flex justify-between items-center z-30 shadow-lg">
+            <button onclick="switchTab('home')" class="nav-btn flex flex-col items-center text-autumn-orange transition space-y-1" id="btn-home">
+                <i class="fa-solid fa-wheat-awn text-xl"></i>
+                <span class="text-[11px] font-bold">麦田首页</span>
+            </button>
+            <button onclick="switchTab('granary')" class="nav-btn flex flex-col items-center text-gray-400 hover:text-wheat-700 transition space-y-1" id="btn-granary">
+                <i class="fa-solid fa-warehouse text-xl"></i>
+                <span class="text-[11px] font-bold">秋收粮仓</span>
+            </button>
+            <button onclick="openAddModal()" class="w-12 h-12 bg-gradient-to-tr from-autumn-orange to-amber-500 rounded-full text-white flex items-center justify-center shadow-lg transform hover:scale-105 transition -mt-6 border-4 border-white">
+                <i class="fa-solid fa-plus text-lg"></i>
+            </button>
+            <button onclick="switchTab('stats')" class="nav-btn flex flex-col items-center text-gray-400 hover:text-wheat-700 transition space-y-1" id="btn-stats">
+                <i class="fa-solid fa-chart-pie text-xl"></i>
+                <span class="text-[11px] font-bold">收支统计</span>
+            </button>
+            <button onclick="showProfileToast()" class="nav-btn flex flex-col items-center text-gray-400 hover:text-wheat-700 transition space-y-1" id="btn-profile">
+                <i class="fa-solid fa-user-gear text-xl"></i>
+                <span class="text-[11px] font-bold">学生中心</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="add-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-in fade-in slide-in-from-bottom duration-300 border border-wheat-200">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg text-wheat-900 flex items-center space-x-2">
+                    <i class="fa-solid fa-seedling text-autumn-orange"></i>
+                    <span>坚持记账 · 积累麦穗养分</span>
+                </h3>
+                <button onclick="closeAddModal()" class="w-8 h-8 rounded-full bg-wheat-100 text-gray-500 flex items-center justify-center hover:bg-wheat-200 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="transaction-form" onsubmit="handleTransactionSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-wheat-800 mb-1">金额 (元)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-3.5 text-xl font-bold text-autumn-orange">¥</span>
+                        <input type="number" id="tx-amount" step="0.01" placeholder="0.00" required
+                            class="w-full bg-wheat-50 border border-wheat-300 rounded-2xl py-3 pl-10 pr-4 text-xl font-extrabold text-wheat-900 focus:outline-none focus:ring-2 focus:ring-autumn-orange">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-wheat-800 mb-1">消费类型</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="selectCategory(this, '餐饮美食', 'fa-utensils', 'bg-amber-100 text-amber-700')" class="cat-btn bg-wheat-100 border-2 border-wheat-300 text-wheat-900 p-2.5 rounded-2xl text-xs font-bold flex flex-col items-center space-y-1 transition">
+                            <i class="fa-solid fa-utensils text-base"></i>
+                            <span>餐饮美食</span>
+                        </button>
+                        <button type="button" onclick="selectCategory(this, '学习进修', 'fa-book', 'bg-orange-100 text-orange-600')" class="cat-btn bg-white border border-wheat-200 text-gray-700 p-2.5 rounded-2xl text-xs font-bold flex flex-col items-center space-y-1 transition">
+                            <i class="fa-solid fa-book text-base"></i>
+                            <span>学习进修</span>
+                        </button>
+                        <button type="button" onclick="selectCategory(this, '交通出行', 'fa-bus', 'bg-emerald-100 text-emerald-700')" class="cat-btn bg-white border border-wheat-200 text-gray-700 p-2.5 rounded-2xl text-xs font-bold flex flex-col items-center space-y-1 transition">
+                            <i class="fa-solid fa-bus text-base"></i>
+                            <span>交通出行</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-wheat-800 mb-1">备注说明</label>
+                    <input type="text" id="tx-note" placeholder="例如：食堂三楼黄焖鸡米饭" 
+                        class="w-full bg-wheat-50 border border-wheat-300 rounded-2xl py-2.5 px-4 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-autumn-orange">
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-gradient-to-r from-autumn-orange to-wheat-600 text-white font-bold py-3.5 rounded-2xl shadow-md hover:opacity-95 transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-check"></i>
+                        <span>确认记账并完成今日打卡</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Budget Settings Modal -->
+    <div id="budget-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in fade-in duration-300 border border-wheat-200">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg text-wheat-900 flex items-center space-x-2">
+                    <i class="fa-solid fa-warehouse text-autumn-orange"></i>
+                    <span>设置每月生活费粮仓</span>
+                </h3>
+                <button onclick="closeBudgetModal()" class="w-8 h-8 rounded-full bg-wheat-100 text-gray-500 flex items-center justify-center hover:bg-wheat-200 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-wheat-800 mb-1">每月生活费总额 (元)</label>
+                    <input type="number" id="input-budget-val" value="1500" class="w-full bg-wheat-50 border border-wheat-300 rounded-2xl py-3 px-4 text-lg font-bold text-wheat-900 focus:outline-none focus:ring-2 focus:ring-autumn-orange">
+                </div>
+                <button onclick="saveBudget()" class="w-full bg-wheat-700 hover:bg-wheat-800 text-white font-bold py-3 rounded-2xl transition">保存粮仓设置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-wheat-900 text-white px-5 py-3 rounded-2xl shadow-xl text-xs font-bold z-50 hidden transition-all duration-300 flex items-center space-x-2">
+        <i class="fa-solid fa-circle-check text-autumn-orange"></i>
+        <span id="toast-msg">操作成功</span>
+    </div>
+
+    <script>
+        // State management for Habit-driven growth (方案二)
+        let state = {
+            streakDays: 5,
+            wheatExp: 85,
+            totalBudget: 1500.00,
+            spentBudget: 480.00,
+            selectedCategory: { name: '餐饮美食', icon: 'fa-utensils', color: 'bg-amber-100 text-amber-700' },
+            transactions: [
+                { name: '食堂午餐', category: '餐饮美食', icon: 'fa-utensils', color: 'bg-amber-100 text-amber-700', amount: 18.00, time: '12:30' },
+                { name: '专业教材购买', category: '学习进修', icon: 'fa-book', color: 'bg-orange-100 text-orange-600', amount: 120.50, time: '10:15' },
+                { name: '校园公交卡充值', category: '交通出行', icon: 'fa-bus', color: 'bg-emerald-100 text-emerald-700', amount: 30.00, time: '08:20' }
+            ]
+        };
+
+        // Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-autumn-orange');
+                btn.classList.add('text-gray-400');
+            });
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-gray-400');
+                activeBtn.classList.add('text-autumn-orange');
+            }
+
+            // Subtitle update
+            const subtitle = document.getElementById('header-subtitle');
+            if(tabId === 'home') subtitle.innerText = '坚持记账，静待麦田成熟';
+            else if(tabId === 'granary') subtitle.innerText = '科学储粮，理性消费';
+            else if(tabId === 'stats') subtitle.innerText = '秋收账本，一目了然';
+        }
+
+        // Modal Controls
+        function openAddModal() {
+            document.getElementById('add-modal').classList.remove('hidden');
+        }
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.add('hidden');
+        }
+        function openBudgetModal() {
+            document.getElementById('input-budget-val').value = state.totalBudget;
+            document.getElementById('budget-modal').classList.remove('hidden');
+        }
+        function closeBudgetModal() {
+            document.getElementById('budget-modal').classList.add('hidden');
+        }
+
+        function saveBudget() {
+            const val = parseFloat(document.getElementById('input-budget-val').value);
+            if(isNaN(val) || val <= 0) {
+                showToast('请输入有效的预算金额');
+                return;
+            }
+            state.totalBudget = val;
+            closeBudgetModal();
+            updateUI();
+            showToast('粮仓总生活费设置成功！');
+        }
+
+        // Category selection in modal
+        function selectCategory(el, name, icon, color) {
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.className = "cat-btn bg-white border border-wheat-200 text-gray-700 p-2.5 rounded-2xl text-xs font-bold flex flex-col items-center space-y-1 transition";
+            });
+            el.className = "cat-btn bg-wheat-100 border-2 border-wheat-300 text-wheat-900 p-2.5 rounded-2xl text-xs font-bold flex flex-col items-center space-y-1 transition";
+            state.selectedCategory = { name, icon, color };
+        }
+
+        // Handle Add Transaction (Habit persistence reward)
+        function handleTransactionSubmit(event) {
+            event.preventDefault();
+            const amountInput = document.getElementById('tx-amount');
+            const noteInput = document.getElementById('tx-note');
+            
+            const amount = parseFloat(amountInput.value);
+            if(isNaN(amount) || amount <= 0) return;
+
+            const note = noteInput.value.trim() || state.selectedCategory.name;
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+            // Update state (Habit model: adding expense increases habit exp and granary consumption)
+            state.spentBudget += amount;
+            state.wheatExp = Math.min(100, state.wheatExp + 15);
+            if (state.wheatExp === 100) {
+                state.streakDays += 1;
+                state.wheatExp = 20; // Level up reset loop
+                showToast('🎉 恭喜！连续记账习惯达成，小麦已成功升级丰收！');
+            }
+            
+            state.transactions.unshift({
+                name: note,
+                category: state.selectedCategory.name,
+                icon: state.selectedCategory.icon,
+                color: state.selectedCategory.color,
+                amount: amount,
+                time: timeStr
+            });
+
+            amountInput.value = '';
+            noteInput.value = '';
+            closeAddModal();
+            updateUI();
+            if (state.wheatExp !== 20) {
+                showToast(`记账成功！坚持打卡，小麦成长值 +15 🌱`);
+            }
+        }
+
+        // Update UI elements dynamically
+        function updateUI() {
+            document.getElementById('streak-days').innerText = state.streakDays;
+            document.getElementById('wheat-exp').innerText = state.wheatExp;
+            document.getElementById('total-budget').innerText = state.totalBudget.toFixed(2);
+            document.getElementById('spent-budget').innerText = state.spentBudget.toFixed(2);
+
+            // Calculate granary percentage
+            const remaining = Math.max(0, state.totalBudget - state.spentBudget);
+            const percent = Math.round((remaining / state.totalBudget) * 100);
+            
+            document.getElementById('granary-percent').innerText = percent + '%';
+            document.getElementById('granary-fill').style.height = percent + '%';
+
+            const statusText = document.getElementById('granary-status-text');
+            if (percent > 60) {
+                statusText.innerText = '储粮丰厚，安心食用 🌾';
+            } else if (percent > 30) {
+                statusText.innerText = '存粮过半，注意节约 🍂';
+            } else if (percent > 10) {
+                statusText.innerText = '粮仓告急，精打细算 ⚠️';
+            } else {
+                statusText.innerText = '空空如也，等待月底补给 🚨';
+            }
+
+            // Re-render transaction list
+            const listContainer = document.getElementById('transaction-list');
+            listContainer.innerHTML = state.transactions.map(tx => `
+                <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-wheat-100 flex items-center justify-between hover:border-wheat-300 transition">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-2xl ${tx.color} flex items-center justify-center text-base">
+                            <i class="fa-solid ${tx.icon}"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-gray-800">${tx.name}</h4>
+                            <p class="text-xs text-gray-400">${tx.category} · ${tx.time}</p>
+                        </div>
+                    </div>
+                    <span class="font-bold text-autumn-orange text-base">- ¥${tx.amount.toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        function showProfileToast() {
+            showToast('学生用户专属版 · 麦穗 Wheat v1.0.1 (习惯养成版)');
+        }
+
+        // Initialize Chart.js
+        window.onload = function() {
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                    datasets: [{
+                        label: '每日支出 (元)',
+                        data: [45, 60, 30, 85, 55, 120, 85],
+                        borderColor: '#E07A5F',
+                        backgroundColor: 'rgba(224, 122, 95, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#D4A373',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#F9F4E8' },
+                            ticks: { font: { size: 10 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
